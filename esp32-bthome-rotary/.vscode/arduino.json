@@ -3,5 +3,5 @@
     "board": "esp32:esp32:d32",
     "sketch": "BTHome/BTHome.ino",
     "programmer": "esptool",
-    "port": "/dev/tty.usbserial-120"
+    "port": "/dev/tty.usbserial-1120"
 }

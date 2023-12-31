@@ -40,13 +40,13 @@ AiEsp32RotaryEncoder rotaryEncoder = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, 
 #define SWITCH 33
 bool lights = false;
 
-void bt_actions(uint val, bool lights) {
+void bt_actions(uint val) {
   //MEASUREMENT_MAX_LEN = 23, ENABLE_ENCRYPT will use extra 8 bytes, so each Measurement should smaller than 15
   uint lightsInt = lights == true ? 1 : 0;
   // 1st method: just addMeasurement as much as you can, the code will split and send the adv packet automatically
   // each adv packet sending lasts for 1500ms
   Serial.printf("Lights: %d | Rotary: %d", lightsInt, val);
-  bthome.resetMeasurement();
+  
   // bthome.addMeasurement(sensorid, value) you can use the sensorids from the BTHome.h file
   // the Object ids of addMeasurement have to be applied in numerical order (from low to high) in your advertisement
   //bthome.addMeasurement(ID_TEMPERATURE_PRECISE, 35.00f);//3
@@ -55,22 +55,30 @@ void bt_actions(uint val, bool lights) {
   //bthome.addMeasurement(ID_ILLUMINANCE, 50.81f);//4 bytes
   //bthome.addMeasurement_state(STATE_POWER_ON, STATE_ON);//2
 
-  bthome.addMeasurement(ID_CO2, (uint64_t)lightsInt);//3
-  bthome.addMeasurement(ID_ILLUMINANCE, (float)val);//4 bytes
+  
   //bthome.addMeasurement(ID_TVOC, (uint64_t)350);//3
   //bthome.addMeasurement_state(EVENT_BUTTON, EVENT_BUTTON_PRESS);//2 button press
   //bthome.addMeasurement_state(EVENT_DIMMER, EVENT_DIMMER_RIGHT, 6); //3, rotate right 6 steps
-  bthome.sendPacket();
-  bthome.stop();
+  //bthome.sendPacket();
+  //bthome.stop();
 
   // 2nd method: make sure each measurement data length <=15 and start(stop) manually
-  bthome.resetMeasurement();
+  //bthome.resetMeasurement();
   //bthome.addMeasurement(ID_TEMPERATURE_PRECISE, 26.00f);//3
   //bthome.addMeasurement(ID_HUMIDITY_PRECISE, 70.00f);//3
   //bthome.addMeasurement(ID_PRESSURE, 1000.86f);//4
-  bthome.buildPaket();
-  bthome.start(1000);//start the first adv data
-  //delay(15);
+  for (int i = 0; i <= 40; i++) {
+    bthome.resetMeasurement();
+    bthome.addMeasurement(ID_CO2, (uint64_t)lightsInt);//3
+    bthome.addMeasurement(ID_ILLUMINANCE, (float)val);//4 bytes
+    bthome.buildPaket();
+    bthome.start();//start the first adv data
+    delay(10);
+    bthome.stop();
+    //bthome.sendPacket(2);
+    //Serial.printf("Lights: %d | Rotary: %d", lightsInt, val);
+  }
+  //delay(300);
 
   /*
   bthome.resetMeasurement();
@@ -81,10 +89,9 @@ void bt_actions(uint val, bool lights) {
   bthome.addMeasurement_state(EVENT_DIMMER, EVENT_DIMMER_RIGHT, 6); //3, rotate right 6 steps
   bthome.buildPaket();//change the adv data
   delay(1500);
-  bthome.stop();
-  */
 
   //delay(10);
+  */
 }
 
 void rotary_onButtonClick()
@@ -109,12 +116,12 @@ void rotary_loop()
 	{
 		Serial.print("Value rotary: ");
 		Serial.println(rotaryEncoder.readEncoder());
-    bt_actions(rotaryEncoder.readEncoder(), lights);
+    bt_actions(rotaryEncoder.readEncoder());
 	}
 	if (rotaryEncoder.isEncoderButtonClicked())
 	{
 		rotary_onButtonClick();
-    bt_actions(rotaryEncoder.readEncoder(), lights);
+    bt_actions(rotaryEncoder.readEncoder());
 	}
 }
 
